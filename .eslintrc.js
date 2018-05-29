@@ -66,5 +66,8 @@ module.exports = {
     //引号类型 `` "" ''
     // "quotes": [1, "single"],
     "quotes": 0,
+    //对象字面量中冒号的前后空格
+    // "key-spacing": [0, { "beforeColon": false, "afterColon": true }],
+    "key-spacing": 0,
   }
 }
