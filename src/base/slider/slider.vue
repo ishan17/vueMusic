@@ -6,7 +6,7 @@
       </slot>
     </div>
     <div class="dots">
-      
+      <span class="dot" :class="{active: currentPageIndex === index }" v-for="(item, index) in dots" :key="index"></span>
     </div>
   </div>
 </template>
@@ -31,42 +31,42 @@
         default: 4000
       }
     },
-    // data() {
-    //   return {
-    //     dots: [],
-    //     currentPageIndex: 0
-    //   }
-    // },
+    data() {
+      return {
+        dots: [],
+        currentPageIndex: 0
+      }
+    },
     mounted() {
       setTimeout(() => {
         this._setSliderWidth()
-        // this._initDots()
+        this._initDots()
         this._initSlider()
 
-        // if (this.autoPlay) {
-        //   this._play()
-        // }
+        if (this.autoPlay) {
+          this._play()
+        }
       }, 20)
 
-    //   window.addEventListener('resize', () => {
-    //     if (!this.slider) {
-    //       return
-    //     }
-    //     this._setSliderWidth(true)
-    //     this.slider.refresh()
-    //   })
+      window.addEventListener('resize', () => {
+        if (!this.slider) {
+          return
+        }
+        this._setSliderWidth(true)
+        this.slider.refresh()
+      })
     },
-    // activated() {
-    //   if (this.autoPlay) {
-    //     this._play()
-    //   }
-    // },
-    // deactivated() {
-    //   clearTimeout(this.timer)
-    // },
-    // beforeDestroy() {
-    //   clearTimeout(this.timer)
-    // },
+    activated() {
+      if (this.autoPlay) {
+        this._play()
+      }
+    },
+    deactivated() {
+      clearTimeout(this.timer)
+    },
+    beforeDestroy() {
+      clearTimeout(this.timer)
+    },
     methods: {
       _setSliderWidth(isResize) {
         this.children = this.$refs.sliderGroup.children
@@ -80,8 +80,8 @@
           child.style.width = sliderWidth + 'px'
           width += sliderWidth
         }
-        // if (this.loop && !isResize) {
-        if (this.loop) {
+        if (this.loop && !isResize) {
+          // better-scroll 会在图片前后各备份一幅图片
           width += 2 * sliderWidth
         }
         this.$refs.sliderGroup.style.width = width + 'px'
@@ -94,26 +94,31 @@
           snap: true,
           snapLoop: this.loop,
           snapThreshold: 0.3,
-          snapSpeed: 400
+          snapSpeed: 400,
+          // 链接跳转  默认false阻止跳转
+          click: true
         })
 
-        // this.slider.on('scrollEnd', () => {
-        //   let pageIndex = this.slider.getCurrentPage().pageX
-        //   if (this.loop) {
-        //     pageIndex -= 1
-        //   }
-        //   this.currentPageIndex = pageIndex
+        this.slider.on('scrollEnd', () => {
+          let pageIndex = this.slider.getCurrentPage().pageX
+          // pageIndex  1-5
+          if (this.loop) {
+            // dots是从0-4
+            pageIndex -= 1
+          }
+          this.currentPageIndex = pageIndex
 
-        //   if (this.autoPlay) {
-        //     this._play()
-        //   }
-        // })
+          if (this.autoPlay) {
+            clearTimeout(this.timer)
+            this._play()
+          }
+        })
 
-        // this.slider.on('beforeScrollStart', () => {
-        //   if (this.autoPlay) {
-        //     clearTimeout(this.timer)
-        //   }
-        // })
+        this.slider.on('beforeScrollStart', () => {
+          if (this.autoPlay) {
+            clearTimeout(this.timer)
+          }
+        })
       },
       _initDots() {
         this.dots = new Array(this.children.length)

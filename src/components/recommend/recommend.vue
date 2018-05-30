@@ -1,7 +1,7 @@
 <template>
   <div class="recommend" ref="recommend">
     <!-- <scroll ref="scroll" class="recommend-content" :data="discList"> -->
-      <div>
+      <div class="recommend-content">
         <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
           <slider>
             <div v-for="item in recommends" :key="item.id">
@@ -36,7 +36,7 @@
 </template>
 
 <script type="text/ecmascript-6">
-import {getRecommend} from 'src/api/recommend'
+import {getRecommend,getDiscList} from 'src/api/recommend'
 import {ERR_OK as ok} from 'src/api/config'
 
 import Slider from 'src/base/slider/slider'
@@ -56,6 +56,7 @@ export default {
     created() {
         // this 包含当前组件的一些属性方法
         this._getRecommend()
+        this._getDiscList()
     },
     methods: {
         _getRecommend() {
@@ -64,6 +65,11 @@ export default {
                     this.recommends = res.data.slider
                 }
             })
+        },
+        _getDiscList() {
+          getDiscList().then((res) => {
+            console.log(res)
+          })
         }
     },
     components: {
@@ -80,12 +86,6 @@ export default {
     width: 100%
     top: 88px
     bottom: 0
-    .list-title
-      height: 65px
-      line-height: 65px
-      text-align: center
-      font-size: $font-size-medium
-      color: $color-theme
     .recommend-content
       height: 100%
       overflow: hidden
