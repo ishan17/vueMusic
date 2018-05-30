@@ -22,4 +22,4 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 
 
 
-# better-scroll  V-0.1.15
+> better-scroll  V-0.1.15
