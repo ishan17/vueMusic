@@ -9,6 +9,21 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const portfinder = require('portfinder')
+const axios = require('axios')
+// nodejs开发框架express，用来简化操作
+const express = require('express')
+
+// 下面的代码  放在DevServer的before函数里面不能截获请求？？？？？？
+// 创建node.js的express开发框架的实例
+const app = express() 
+// // 引用的json地址
+// var appData = require('../data.json')
+// // json某一个key
+// var goods = appData.result
+var apiRoutes = express.Router()
+app.use('/api', apiRoutes)
+
+
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
@@ -42,6 +57,26 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before(app) {
+
+      app.get('/api/getDiscList',(req,res) => {
+        // res 是一个ServerResponse对象
+        const url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
+        axios.get(url,{
+          headers: {
+            referer: 'https://c.y.qq.com/',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then(response => {
+          // response包含status\statusText\headers\config\request\data等多字段， 只需返回前台所需data字段即可
+          // res.jaon()  && res.send()
+          res.json(response.data)
+        }).catch(err => {
+          console.log(err)
+        })
+      })
     }
   },
   plugins: [

@@ -56,6 +56,7 @@ export default {
     created() {
         // this 包含当前组件的一些属性方法
         this._getRecommend()
+        // 歌单接口数据改变
         this._getDiscList()
     },
     methods: {
@@ -68,7 +69,9 @@ export default {
         },
         _getDiscList() {
           getDiscList().then((res) => {
-            console.log(res)
+            if (res.code === ok) {
+                console.log(res.data)
+            }
           })
         }
     },
