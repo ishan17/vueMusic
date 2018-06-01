@@ -1,21 +1,21 @@
 <template>
   <div class="recommend" ref="recommend">
-    <!-- <scroll ref="scroll" class="recommend-content" :data="discList"> -->
-      <div class="recommend-content">
+    <scroll ref="scroll" class="recommend-content" :data="discList">
+      <div>
         <div v-if="recommends.length" class="slider-wrapper" ref="sliderWrapper">
           <slider>
             <div v-for="item in recommends" :key="item.id">
               <a :href="item.linkUrl">
-                <!-- <img class="needsclick" @load="loadImage" :src="item.picUrl"> -->
-                <img class="needsclick" :src="item.picUrl">
+                <img class="needsclick" @load="loadImage" :src="item.picUrl">
               </a>
             </div>
           </slider>
         </div>
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
-          <!-- <ul>
-            <li @click="selectItem(item)" v-for="item in discList" class="item">
+          <ul>
+            <!-- <li @click="selectItem(item)" v-for="item in discList" class="item"> -->
+            <li v-for="item in discList" :key="item.listennum" class="item">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl">
               </div>
@@ -24,13 +24,13 @@
                 <p class="desc" v-html="item.dissname"></p>
               </div>
             </li>
-          </ul> -->
+          </ul>
         </div>
       </div>
-      <!-- <div class="loading-container" v-show="!discList.length">
+      <div class="loading-container" v-show="!discList.length">
         <loading></loading>
-      </div> -->
-    <!-- </scroll> -->
+      </div>
+    </scroll>
     <!-- <router-view></router-view> -->
   </div>
 </template>
@@ -40,6 +40,8 @@ import {getRecommend,getDiscList} from 'src/api/recommend'
 import {ERR_OK as ok} from 'src/api/config'
 
 import Slider from 'src/base/slider/slider'
+import Scroll from 'src/base/scroll/scroll'
+import Loading from 'src/base/loading/loading'
 
 /**
  * 一个生命周期钩子函数，就是一个vue实例被生成后调用这个函数。
@@ -50,7 +52,8 @@ import Slider from 'src/base/slider/slider'
 export default {
     data() {
         return {
-            recommends: []
+            recommends: [],
+            discList: []
         }
     },
     created() {
@@ -70,13 +73,22 @@ export default {
         _getDiscList() {
           getDiscList().then((res) => {
             if (res.code === ok) {
-                console.log(res.data)
+                this.discList = res.data.list
             }
           })
+        },
+        // 添加一个图片加载监听  防止slider数据晚于歌单数据获取，  影响better-scroll高度获取  使歌单数据不能滑动到底部
+        loadImage() {
+          if (!this.checkLoad) {
+            this.$refs.scroll.refresh();
+            this.checkLoad = true;
+          }
         }
     },
     components: {
-        Slider
+        Slider,
+        Scroll,
+        Loading
     }
 }
 </script>
