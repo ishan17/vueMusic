@@ -15,6 +15,8 @@ import Singer from "common/js/singer"
 // ListView驼峰式的 写标签名时<list-view>
 import ListView from "src/base/listview/listview"
 
+import {mapMutations} from 'vuex'
+
 const HOT_NAME = "热门";
 const HOT_SINGER_LEN = 10;
 export default {
@@ -31,6 +33,7 @@ export default {
             this.$router.push({
                 path: `/singer/${singer.id}`
             })
+            this.setSinger(singer)
         },
         _getSingerList: function() {
             getSingerList().then(res => {
@@ -84,7 +87,11 @@ export default {
                 return a.title.charCodeAt(0) - b.title.charCodeAt(0)
             })
             return hot.concat(ret)
-        }
+        },
+        // 使用 mapMutations 辅助函数将组件中的 methods 映射为 store.commit 调用（需要在根节点注入 store）
+        ...mapMutations({
+            setSinger: 'SET_SINGER'
+        })
     },
     components: {
         ListView
