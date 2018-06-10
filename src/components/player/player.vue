@@ -16,7 +16,7 @@
             <div class="middle">
                 <div class="middle-l">
                     <div class="cd-wrapper" ref="cdWrapper">
-                        <div class="cd">
+                        <div class="cd" :class="cdRotate" >
                             <img class="image" :src="currentSong.image">
                         </div>
                     </div>
@@ -28,13 +28,13 @@
                         <i class="icon-sequence"></i>
                     </div>
                     <div class="icon i-left">
-                        <i class="icon-prev"></i>
+                        <i @click="prev" class="icon-prev"></i>
                     </div>
                     <div class="icon i-center">
-                        <i class="icon-play"></i>
+                        <i @click="togglePlaying" :class="iconPlay"></i>
                     </div>
                     <div class="icon i-right">
-                        <i class="icon-next"></i>
+                        <i @click="next" class="icon-next"></i>
                     </div>
                     <div class="icon i-right">
                         <i class="icon icon-not-favorite"></i>
@@ -46,18 +46,21 @@
         <transition name="mini">
             <div class="mini-player" v-show="!fullScreen" @click="open">
             <div class="icon">
-                <img width="40" height="40" :src="currentSong.image">
+                <img :class="cdRotate" width="40" height="40" :src="currentSong.image">
             </div>
             <div class="text">
                 <h2 class="name" v-html="currentSong.name"></h2>
                 <p class="desc" v-html="currentSong.singer"></p>
             </div>
-            <div class="control"></div>
+            <div class="control">
+                <i @click.stop="togglePlaying" :class="iconMini"></i>
+            </div>
             <div class="control">
                 <i class="icon-playlist"></i>
             </div>
         </div>
         </transition>
+        <audio ref="audio" :src="currentSong.url" @play="ready" @error="error"></audio>
     </div>
 </template>
 
@@ -70,11 +73,27 @@ import {prefixStyle} from 'common/js/dom'
 const transform = prefixStyle('transform')
 
 export default {
+    data() {
+        return {
+            playReady: false
+        }
+    },
     computed: {
+        iconPlay() {
+            return this.playing ? 'icon-pause' : 'icon-play'
+        },
+        iconMini() {
+            return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+        },
+        cdRotate() {
+            return this.playing ? 'play' : 'play pause'
+        },
         ...mapGetters([
             'fullScreen',
             'playlist',
-            'currentSong'
+            'currentSong',
+            'playing',
+            'currentIndex'
         ])
     },
     methods: {
@@ -126,6 +145,49 @@ export default {
             this.$refs.cdWrapper.style.transition = ''
             this.$refs.cdWrapper.style[transform] = ''
         },
+        togglePlaying() {
+            if (!this.playReady) {
+                return
+            }
+            this.setPlayingState(!this.playing)
+        },
+        prev() {
+            if (!this.playReady) {
+                return
+            }
+            let index = this.currentIndex + 1
+            if (index === this.playlist.length) {
+                index = 0
+            }
+            this.setCurrentIndex(index)
+            if (!this.playing) {
+                this.togglePlaying()
+            }
+            this.playReady = false
+        },
+        next() {
+            if (!this.playReady) {
+                return
+            }
+            let index = this.currentIndex - 1
+            if (index === -1) {
+                index = this.playlist.length - 1
+            }
+            if (!this.playing) {
+                this.setPlayingState = true
+            }
+            this.setCurrentIndex(index)
+            if (!this.playing) {
+                this.togglePlaying()
+            }
+            this.playReady = false
+        },
+        ready() {
+            this.playReady = true
+        },
+        error() {
+
+        },
         _getPosAndScale() {
             // 小图片宽度
             const targetWidth = 40  
@@ -148,8 +210,25 @@ export default {
             }
         },
         ...mapMutations({
-            setFullScreen: 'SET_FULL_SCREEN'
+            setFullScreen: 'SET_FULL_SCREEN',
+            setPlayingState: 'SET_PLAYING_STATE',
+            setCurrentIndex: 'SET_CURRENT_INDEX'
         })
+    },
+    watch: {
+        currentSong() {
+            // Vue 实现响应式并不是数据发生变化之后 DOM 立即变化，而是按一定的策略进行 DOM 的更新
+            // $nextTick 是在下次 DOM 更新循环结束之后执行延迟回调，在修改数据之后使用 $nextTick，则可以在回调中获取更新后的 DOM
+            this.$nextTick(() => {
+                this.$refs.audio.play()
+            })
+        },
+        playing(newPlaying) {
+            const audio = this.$refs.audio
+            this.$nextTick(() => {
+                newPlaying ? audio.play() : audio.pause()
+            })
+        }
     }
 }
 </script>
