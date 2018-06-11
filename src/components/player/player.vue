@@ -23,17 +23,24 @@
                 </div>
             </div>
             <div class="bottom">
-                <div class="operators">
-                    <div class="icon i-left">
-                        <i class="icon-sequence"></i>
+                <div class="progress-wrapper">
+                    <span class="time time-l">{{formate(currentTime)}}</span>
+                    <div class="progress-bar-wrapper">
+                        <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
                     </div>
-                    <div class="icon i-left">
+                    <span class="time time-r">{{formate(currentSong.duration)}}</span>
+                </div>
+                <div class="operators">
+                    <div class="icon i-left" @click="changeModel">
+                        <i :class="iconModel"></i>
+                    </div>
+                    <div class="icon i-left" :class="disabledCls">
                         <i @click="prev" class="icon-prev"></i>
                     </div>
-                    <div class="icon i-center">
+                    <div class="icon i-center" :class="disabledCls">
                         <i @click="togglePlaying" :class="iconPlay"></i>
                     </div>
-                    <div class="icon i-right">
+                    <div class="icon i-right" :class="disabledCls">
                         <i @click="next" class="icon-next"></i>
                     </div>
                     <div class="icon i-right">
@@ -53,14 +60,16 @@
                 <p class="desc" v-html="currentSong.singer"></p>
             </div>
             <div class="control">
-                <i @click.stop="togglePlaying" :class="iconMini"></i>
+                <progress-circle :radius="radius" :percent="percent">
+                <i @click.stop="togglePlaying" class="icon-mini" :class="iconMini"></i>
+                </progress-circle>
             </div>
             <div class="control">
                 <i class="icon-playlist"></i>
             </div>
         </div>
         </transition>
-        <audio ref="audio" :src="currentSong.url" @play="ready" @error="error"></audio>
+        <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
     </div>
 </template>
 
@@ -69,13 +78,19 @@
 import {mapGetters,mapMutations} from 'vuex'
 import animations from 'create-keyframe-animation'
 import {prefixStyle} from 'common/js/dom'
+import progressBar from 'src/base/progress-bar/progress-bar'
+import progressCircle from 'src/base/progress-circle/progress-circle'
+import {playMode} from 'common/js/config'
+import {shuffle} from 'common/js/util'
 
 const transform = prefixStyle('transform')
 
 export default {
     data() {
         return {
-            playReady: false
+            playReady: false,
+            currentTime: 0,
+            radius: 32
         }
     },
     computed: {
@@ -88,12 +103,20 @@ export default {
         cdRotate() {
             return this.playing ? 'play' : 'play pause'
         },
+        percent() {
+            return this.currentTime / this.currentSong.duration
+        },
+        iconModel() {
+            return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+        },
         ...mapGetters([
             'fullScreen',
             'playlist',
             'currentSong',
             'playing',
-            'currentIndex'
+            'currentIndex',
+            'mode',
+            'sequenceList'
         ])
     },
     methods: {
@@ -145,11 +168,25 @@ export default {
             this.$refs.cdWrapper.style.transition = ''
             this.$refs.cdWrapper.style[transform] = ''
         },
+        disabledCls() {
+            return this.playReady ? '' : 'disabled'
+        },
         togglePlaying() {
             if (!this.playReady) {
                 return
             }
             this.setPlayingState(!this.playing)
+        },
+        end() {
+            if (this.mode === playMode.loop) {
+                this.loop()
+            } else {
+                this.next()
+            }
+        },
+        loop() {
+            this.$refs.audio.currentTime = 0
+            this.$refs.audio.play()
         },
         prev() {
             if (!this.playReady) {
@@ -173,9 +210,6 @@ export default {
             if (index === -1) {
                 index = this.playlist.length - 1
             }
-            if (!this.playing) {
-                this.setPlayingState = true
-            }
             this.setCurrentIndex(index)
             if (!this.playing) {
                 this.togglePlaying()
@@ -186,7 +220,49 @@ export default {
             this.playReady = true
         },
         error() {
-
+            this.playReady = true
+        },
+        updateTime(e) {
+            this.currentTime = e.target.currentTime
+        },
+        onProgressBarChange(percent) {
+            this.$refs.audio.currentTime = this.currentSong.duration * percent
+            if (!this.playing) {
+                this.togglePlaying()
+            }
+        },
+        changeModel() {
+            let mode = (this.mode + 1) % 3
+            this.setPlayMode(mode)
+            let list = null
+            if (mode === playMode.random) {
+                list = shuffle(this.sequenceList)
+            } else {
+                list = this.sequenceList
+            }
+            this.resetCurrentIndex(list)
+            this.setPlayList(list)     
+        },
+        resetCurrentIndex(list) {
+            let index = list.findIndex((item) => {
+                return item.id === this.currentSong.id
+            })
+            this.setCurrentIndex(index)
+        },
+        formate(interval) {
+            interval = interval | 0
+            const minute = interval / 60 | 0
+            const second = this._pad(interval % 60)
+            return `${minute}:${second}`
+        },
+        // 补0
+        _pad(num, n = 2) {
+            let len = num.toString().length
+            while (len < n) {
+                num = '0' + num
+                len++
+            }
+            return num
         },
         _getPosAndScale() {
             // 小图片宽度
@@ -212,11 +288,16 @@ export default {
         ...mapMutations({
             setFullScreen: 'SET_FULL_SCREEN',
             setPlayingState: 'SET_PLAYING_STATE',
-            setCurrentIndex: 'SET_CURRENT_INDEX'
+            setCurrentIndex: 'SET_CURRENT_INDEX',
+            setPlayMode: 'SET_PLAY_MODE',
+            setPlayList: 'SET_PLAYLIST'
         })
     },
     watch: {
-        currentSong() {
+        currentSong(newSong,oldSong) {
+            if (newSong.id === oldSong.id) {
+                return
+            }
             // Vue 实现响应式并不是数据发生变化之后 DOM 立即变化，而是按一定的策略进行 DOM 的更新
             // $nextTick 是在下次 DOM 更新循环结束之后执行延迟回调，在修改数据之后使用 $nextTick，则可以在回调中获取更新后的 DOM
             this.$nextTick(() => {
@@ -229,6 +310,10 @@ export default {
                 newPlaying ? audio.play() : audio.pause()
             })
         }
+    },
+    components: {
+        progressBar,
+        progressCircle
     }
 }
 </script>
