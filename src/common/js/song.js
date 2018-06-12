@@ -1,6 +1,6 @@
-// import {getLyric} from 'src/api/song'
-// import {ERR_OK as ok} from 'src/api/config'
-// import {Base64} from 'js-base64'
+import {getLyric} from 'src/api/song'
+import {ERR_OK as ok} from 'src/api/config'
+import {Base64} from 'js-base64'
 
 export default class Song {
   constructor({id, mid, singer, name, album, duration, image, url}) {
@@ -13,23 +13,24 @@ export default class Song {
     this.image = image
     this.url = url
   }
-
-  // getLyric() {
-  //   if (this.lyric) {
-  //     return Promise.resolve(this.lyric)
-  //   }
-
-  //   return new Promise((resolve, reject) => {
-  //     getLyric(this.mid).then((res) => {
-  //       if (res.retcode === ERR_OK) {
-  //         this.lyric = Base64.decode(res.lyric)
-  //         resolve(this.lyric)
-  //       } else {
-  //         reject('no lyric')
-  //       }
-  //     })
-  //   })
-  // }
+  // Song类的一个方法
+  getLyric() {
+    if (this.lyric) {
+      return Promise.resolve(this.lyric)
+    }
+    return new Promise((resolve, reject) => {
+      getLyric(this.mid).then((res) => {
+        if (res.retcode === ok) {
+          this.lyric = Base64.decode(res.lyric)
+          // console.log(this.lyric)
+          resolve(this.lyric)
+        } else {
+          // reject('no lyric')
+          reject(new Error("歌词获取失败！"))
+        }
+      })
+    })
+  }
 }
 
 export function createSong(musicData,vkey) {

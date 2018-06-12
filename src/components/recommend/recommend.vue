@@ -42,6 +42,7 @@ import {ERR_OK as ok} from 'src/api/config'
 import Slider from 'src/base/slider/slider'
 import Scroll from 'src/base/scroll/scroll'
 import Loading from 'src/base/loading/loading'
+import {playlistMixin} from 'common/js/mixin'
 
 /**
  * 一个生命周期钩子函数，就是一个vue实例被生成后调用这个函数。
@@ -50,6 +51,7 @@ import Loading from 'src/base/loading/loading'
  * 一般可以在created函数中调用ajax获取页面初始化所需的数据。
  **/
 export default {
+  mixins: [playlistMixin],
     data() {
         return {
             recommends: [],
@@ -63,6 +65,12 @@ export default {
         this._getDiscList()
     },
     methods: {
+        handlePlaylist(playlist) {
+            const bottom = playlist.length > 0 ? '60px' : ''
+            this.$refs.recommend.style.bottom = bottom
+            // list-view
+            this.$refs.scroll.refresh()
+        },
         _getRecommend() {
             getRecommend().then((res) => {
                 if (res.code === ok) {

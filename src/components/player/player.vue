@@ -13,16 +13,30 @@
                 <h1 class="title" v-html="currentSong.name"></h1>
                 <h2 class="subtitle" v-html="currentSong.singer"></h2>
             </div>
-            <div class="middle">
-                <div class="middle-l">
+            <div class="middle" @touchstart.prevent="middleTouchStart" @touchmove.prevent="middleTouchMove" @touchend="middleTouchEnd">
+                <div class="middle-l" ref="middleL">
                     <div class="cd-wrapper" ref="cdWrapper">
                         <div class="cd" :class="cdRotate" >
                             <img class="image" :src="currentSong.image">
                         </div>
                     </div>
+                    <div class="playing-lyric-wrapper">
+                        <div class="playing-lyric">{{playingLyric}}</div>
+                    </div>
                 </div>
+                <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+                    <div class="lyric-wrapper">
+                        <div v-if="currentLyric">
+                            <p ref="lyricLine" class="text" :class="{'current': currentLineNum === index}" v-if="currentLyric.lines" v-for="(line,index) in currentLyric.lines" :key="index">{{line.txt}}</p>
+                        </div>
+                    </div>
+                </scroll>
             </div>
             <div class="bottom">
+                <div class="dot-wrapper">
+                    <span class="dot" :class="{'active': currentShow === 'cd'}"></span>
+                    <span class="dot" :class="{'active': currentShow === 'lyric'}"></span>
+                </div>
                 <div class="progress-wrapper">
                     <span class="time time-l">{{formate(currentTime)}}</span>
                     <div class="progress-bar-wrapper">
@@ -82,15 +96,26 @@ import progressBar from 'src/base/progress-bar/progress-bar'
 import progressCircle from 'src/base/progress-circle/progress-circle'
 import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/util'
+// Lyric是一个class对象
+import Lyric from 'lyric-parser'
+import Scroll from 'src/base/scroll/scroll'
 
 const transform = prefixStyle('transform')
+const transitionDuration = prefixStyle('transform-duration')
 
 export default {
+    created() {
+        this.touch = {}
+    },
     data() {
         return {
             playReady: false,
             currentTime: 0,
-            radius: 32
+            radius: 32,
+            currentLyric: null,
+            currentLineNum: 0,
+            currentShow: 'cd',
+            playingLyric: ''
         }
     },
     computed: {
@@ -175,6 +200,9 @@ export default {
             if (!this.playReady) {
                 return
             }
+            if (this.currentLyric) {
+                this.currentLyric.togglePlay()
+            }
             this.setPlayingState(!this.playing)
         },
         end() {
@@ -187,18 +215,25 @@ export default {
         loop() {
             this.$refs.audio.currentTime = 0
             this.$refs.audio.play()
+            if (this.currentSong) {
+                this.currentSong.seek(0)
+            }
         },
         prev() {
             if (!this.playReady) {
                 return
             }
-            let index = this.currentIndex + 1
-            if (index === this.playlist.length) {
-                index = 0
-            }
-            this.setCurrentIndex(index)
-            if (!this.playing) {
-                this.togglePlaying()
+            if (this.playlist.length === 1) {
+                this.loop()
+            } else {
+                let index = this.currentIndex - 1
+                if (index === -1) {
+                    index = this.playlist.length - 1
+                }
+                this.setCurrentIndex(index)
+                if (!this.playing) {
+                    this.togglePlaying()
+                }
             }
             this.playReady = false
         },
@@ -206,14 +241,19 @@ export default {
             if (!this.playReady) {
                 return
             }
-            let index = this.currentIndex - 1
-            if (index === -1) {
-                index = this.playlist.length - 1
+            if (this.playlist.length === 1) {
+                this.loop()
+            } else {
+                let index = this.currentIndex + 1
+                if (index === this.playlist.length) {
+                    index = 0
+                }
+                this.setCurrentIndex(index)
+                if (!this.playing) {
+                    this.togglePlaying()
+                }
             }
-            this.setCurrentIndex(index)
-            if (!this.playing) {
-                this.togglePlaying()
-            }
+            
             this.playReady = false
         },
         ready() {
@@ -226,9 +266,13 @@ export default {
             this.currentTime = e.target.currentTime
         },
         onProgressBarChange(percent) {
-            this.$refs.audio.currentTime = this.currentSong.duration * percent
+            const currentTime = this.currentSong.duration * percent
+            this.$refs.audio.currentTime = currentTime
             if (!this.playing) {
                 this.togglePlaying()
+            }
+            if (this.currentLyric) {
+                this.currentLyric.seek(currentTime * 1000)
             }
         },
         changeModel() {
@@ -248,6 +292,87 @@ export default {
                 return item.id === this.currentSong.id
             })
             this.setCurrentIndex(index)
+        },
+        getLyric() {
+            this.currentSong.getLyric().then((lyric) => {
+                this.currentLyric = new Lyric(lyric, this.handleLyric)
+                if (this.playing) {
+                    this.currentLyric.play()
+                }
+                console.log(this.currentLyric)
+            }).catch(() => {
+                this.currentLyric = null
+                this.playingLyric = ''
+                this.currentLineNum = 0
+            })
+        },
+        handleLyric({lineNum,txt}) {
+            this.currentLineNum = lineNum
+            if (lineNum > 5) {
+                let lineEl = this.$refs.lyricLine[lineNum - 5]
+                this.$refs.lyricList.scrollToElement(lineEl,1000)
+            } else {
+                this.$refs.lyricList.scrollTo(0,0,1000)
+            }
+            this.playingLyric = txt
+        },
+        middleTouchStart(e) {
+            this.touch.initiated = true
+            const touch = e.touches[0]
+            this.touch.startX = touch.pageX
+            this.touch.startY = touch.pageY
+        },
+        middleTouchMove(e) {
+            if (!this.touch.initiated) {
+                return
+            }
+            const touch = e.touches[0]
+            const deltaX = touch.pageX - this.touch.startX
+            const deltaY = touch.pageY - this.touch.startY
+            // 纵向滚动
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                return
+            }
+            const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+            const offsetWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
+            this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
+            this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+            this.$refs.lyricList.$el.style[transitionDuration] = 0
+            // 改变CD透明度
+            this.$refs.middleL.style.opacity = 1 - this.touch.opacity
+            this.$refs.middleL.style[transitionDuration] = 0
+        },
+        middleTouchEnd(e) {
+            let offsetWidth
+            let opacity
+            if (!this.touch.initiated) {
+                return
+            }
+            if (this.currentShow === 'cd') {
+                if (this.touch.percent > 0.1) {
+                    offsetWidth = -window.innerWidth
+                    this.currentShow = 'lyric'
+                    opacity = 0
+                } else {
+                    offsetWidth = 0
+                    opacity = 1
+                }
+            } else {
+                if (this.touch.percent < 0.9) {
+                    offsetWidth = 0
+                    this.currentShow = 'cd'
+                    opacity = 1
+                } else {
+                    offsetWidth = -window.innerWidth
+                    opacity = 0
+                }
+            }
+            const time = 300
+            this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+            this.$refs.lyricList.$el.style[transitionDuration] = `${time}`
+            // 改变CD透明度
+            this.$refs.middleL.style.opacity = opacity
+            this.$refs.middleL.style[transitionDuration] = `${time}`
         },
         formate(interval) {
             interval = interval | 0
@@ -298,11 +423,20 @@ export default {
             if (newSong.id === oldSong.id) {
                 return
             }
+            // 每次切换歌曲 需要切断之前的歌曲的歌词
+            if (this.currentLyric) {
+                this.currentLyric.stop()
+            }
             // Vue 实现响应式并不是数据发生变化之后 DOM 立即变化，而是按一定的策略进行 DOM 的更新
             // $nextTick 是在下次 DOM 更新循环结束之后执行延迟回调，在修改数据之后使用 $nextTick，则可以在回调中获取更新后的 DOM
-            this.$nextTick(() => {
+            // this.$nextTick(() => {
+            //     this.$refs.audio.play()
+            //     this.getLyric()
+            // })
+            setTimeout(() => {
                 this.$refs.audio.play()
-            })
+                this.getLyric()
+            }, 1000)
         },
         playing(newPlaying) {
             const audio = this.$refs.audio
@@ -313,7 +447,8 @@ export default {
     },
     components: {
         progressBar,
-        progressCircle
+        progressCircle,
+        Scroll
     }
 }
 </script>

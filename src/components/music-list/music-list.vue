@@ -31,7 +31,8 @@
   import Loading from 'src/base/loading/loading'
   import SongList from 'src/base/song-list/song-list'
   import {prefixStyle} from 'common/js/dom'
-//   import {playlistMixin} from 'common/js/mixin'
+  // 多个组件都需要使用的处理方法 可以放在vue提供mixin
+  import {playlistMixin} from 'common/js/mixin'
   import {mapActions} from 'vuex'
 
   const RESERVED_HEIGHT = 40
@@ -40,7 +41,7 @@
   const backdrop = prefixStyle('backdrop-filter')
 
   export default {
-    // mixins: [playlistMixin],
+    mixins: [playlistMixin],
     props: {
       bgImage: {
         type: String,
@@ -79,11 +80,12 @@
       this.$refs.list.$el.style.top = `${this.imageHeight}px`
     },
     methods: {
-      // handlePlaylist(playlist) {
-      //   const bottom = playlist.length > 0 ? '60px' : ''
-      //   this.$refs.list.$el.style.bottom = bottom
-      //   this.$refs.list.refresh()
-      // },
+      // 当playlist的长度大于0也即有歌曲播放时  把list的底边距设为60px
+      handlePlaylist(playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        this.$refs.list.$el.style.bottom = bottom
+        this.$refs.list.refresh()
+      },
       scroll(pos) {
         this.scrollY = pos.y
       },

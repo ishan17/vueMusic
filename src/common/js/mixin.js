@@ -11,6 +11,7 @@ export const playlistMixin = {
   mounted() {
     this.handlePlaylist(this.playlist)
   },
+  // keeplive 切换之后会重新刷新
   activated() {
     this.handlePlaylist(this.playlist)
   },
@@ -20,6 +21,7 @@ export const playlistMixin = {
     }
   },
   methods: {
+    // 使用mixin的组件必须有该方法 否则执行这里的handlePlaylist() 抛出错误
     handlePlaylist() {
       throw new Error('component must implement handlePlaylist method')
     }
