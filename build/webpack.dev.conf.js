@@ -101,6 +101,33 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           console.log(err)
         })
       })
+
+      app.get('/api/getSongList',(req,res) => {
+        // res 是一个ServerResponse对象
+        const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
+        axios.get(url,{
+          headers: {
+            referer: 'https://y.qq.com/n/yqq/playsquare/4161064256.html',
+            host: 'c.y.qq.com'
+          },
+          params: req.query
+        }).then(response => {
+          // response包含status\statusText\headers\config\request\data等多字段， 只需返回前台所需data字段即可
+          // res.jaon()  && res.send()
+          var ret = response.data
+          // 返回的是json字符串  需要匹配提取数据
+          if (typeof ret === 'string') {
+            var reg = /^\w+\(({[^()]+})\)$/
+            var matches = ret.match(reg)
+            if (matches) {
+              ret = JSON.parse(matches[1])
+            }
+          }
+          res.json(ret)
+        }).catch(err => {
+          console.log(err)
+        })
+      })
     }
   },
   plugins: [

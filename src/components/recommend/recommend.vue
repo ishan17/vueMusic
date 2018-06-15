@@ -14,8 +14,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <!-- <li @click="selectItem(item)" v-for="item in discList" class="item"> -->
-            <li v-for="item in discList" :key="item.listennum" class="item">
+            <li @click="selectItem(item)" v-for="(item,index) in discList" :key="index" class="item">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl">
               </div>
@@ -31,7 +30,7 @@
         <loading></loading>
       </div>
     </scroll>
-    <!-- <router-view></router-view> -->
+    <router-view></router-view>
   </div>
 </template>
 
@@ -43,6 +42,8 @@ import Slider from 'src/base/slider/slider'
 import Scroll from 'src/base/scroll/scroll'
 import Loading from 'src/base/loading/loading'
 import {playlistMixin} from 'common/js/mixin'
+
+import {mapMutations} from 'vuex'
 
 /**
  * 一个生命周期钩子函数，就是一个vue实例被生成后调用这个函数。
@@ -65,6 +66,12 @@ export default {
         this._getDiscList()
     },
     methods: {
+        selectItem(item) {
+          this.$router.push({
+            path: `/recommend/${item.dissid}`
+          })
+          this.setDisc(item)
+        },
         handlePlaylist(playlist) {
             const bottom = playlist.length > 0 ? '60px' : ''
             this.$refs.recommend.style.bottom = bottom
@@ -91,7 +98,10 @@ export default {
             this.$refs.scroll.refresh();
             this.checkLoad = true;
           }
-        }
+        },
+        ...mapMutations({
+          setDisc: 'SET_DISC'
+        })
     },
     components: {
         Slider,
