@@ -128,6 +128,24 @@ const devWebpackConfig = merge(baseWebpackConfig, {
           console.log(err)
         })
       })
+
+      app.get('/api/getTopList',(req,res) => {
+        // res 是一个ServerResponse对象
+        const url = 'https://c.y.qq.com/v8/fcg-bin/fcg_myqq_toplist.fcg'
+        axios.get(url,{
+          headers: {
+            referer: 'https://m.y.qq.com',
+            origin: 'https://m.y.qq.com'
+          },
+          params: req.query
+        }).then(response => {
+          // response包含status\statusText\headers\config\request\data等多字段， 只需返回前台所需data字段即可
+          // res.jaon()  && res.send()
+          res.json(response.data)
+        }).catch(err => {
+          console.log(err)
+        })
+      })
     }
   },
   plugins: [

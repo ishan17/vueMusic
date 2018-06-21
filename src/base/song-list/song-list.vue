@@ -2,9 +2,9 @@
   <div class="song-list">
     <ul>
       <li @click="selectItem(song,index)" class="item" v-for="(song, index) in songs" :key="index">
-        <!-- <div class="rank" v-show="rank">
+        <div class="rank" v-show="rank">
           <span :class="getRankCls(index)" v-text="getRankText(index)"></span>
-        </div> -->
+        </div>
         <div class="content">
           <h2 class="name">{{song.name}}</h2>
           <p class="desc">{{getDesc(song)}}</p>
@@ -20,11 +20,12 @@
       songs: {
         type: Array,
         default: () => []
+      },
+      // 该props控制是否有排行样式  默认为fasle
+      rank: {
+        type: Boolean,
+        default: false
       }
-    //   rank: {
-    //     type: Boolean,
-    //     default: false
-    //   }
     },
     methods: {
       selectItem(item, index) {
@@ -32,19 +33,19 @@
       },
       getDesc(song) {
         return `${song.singer}·${song.album}`
+      },
+      getRankCls(index) {
+        if (index <= 2) {
+          return `icon icon${index}`
+        } else {
+          return 'text'
+        }
+      },
+      getRankText(index) {
+        if (index > 2) {
+          return index + 1
+        }
       }
-    //   getRankCls(index) {
-    //     if (index <= 2) {
-    //       return `icon icon${index}`
-    //     } else {
-    //       return 'text'
-    //     }
-    //   },
-    //   getRankText(index) {
-    //     if (index > 2) {
-    //       return index + 1
-    //     }
-    //   }
     }
   }
 </script>

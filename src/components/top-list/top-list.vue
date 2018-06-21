@@ -1,12 +1,12 @@
 <template>
   <transition name="slide">
-    <music-list :title="title" :bg-image="bgImage" :songs="songs"></music-list>
+    <music-list :rank="rank" :title="title" :bg-image="bgImage" :songs="songs"></music-list>
   </transition>
 </template>
 
 <script type="text/ecmascript-6">
   import MusicList from 'components/music-list/music-list'
-  import {getSongList} from 'src/api/recommend'
+  import {getMusicList} from 'src/api/rank'
   import {ERR_OK as ok} from 'src/api/config'
   import {mapGetters} from 'vuex'
   import {createSong} from 'common/js/song'
@@ -15,39 +15,43 @@
   export default {
     computed: {
       title() {
-        return this.disc.dissname
+        return this.topList.topTitle
       },
       bgImage() {
-        return this.disc.imgurl
+        if (this.songs.length) {
+          return this.songs[0].image
+        }
+        return ''
       },
       ...mapGetters([
-        'disc'
+        'topList'
       ])
     },
     data() {
       return {
-        songs: []
+        songs: [],
+        rank: true
       }
     },
     created() {
-      this._getSongList()
+      this._getMusicList()
     },
     methods: {
-      _getSongList() {
-        // 刷新页面时返回上级页面
-        if (!this.disc.dissid) {
-          this.$router.push('/recommend')
+      _getMusicList() {
+        if (!this.topList.id) {
+          this.$router.push('/rank')
           return
         }
-        getSongList(this.disc.dissid).then((res) => {
+        getMusicList(this.topList.id).then((res) => {
           if (res.code === ok) {
-            this.songs = this._normalizeSongs(res.cdlist[0].songlist)
+            this.songs = this._normalizeSongs(res.songlist)
           }
         })
       },
       _normalizeSongs(list) {
         let ret = []
-        list.forEach((musicData) => {
+        list.forEach((item) => {
+          const musicData = item.data
           if (musicData.songid && musicData.albummid) {
             let param = {
               songmid: musicData.songmid,
@@ -72,7 +76,7 @@
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   .slide-enter-active, .slide-leave-active
-    transition: all 0.3s
+    transition: all 0.3s ease
 
   .slide-enter, .slide-leave-to
     transform: translate3d(100%, 0, 0)

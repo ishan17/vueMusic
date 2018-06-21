@@ -215,8 +215,9 @@ export default {
         loop() {
             this.$refs.audio.currentTime = 0
             this.$refs.audio.play()
-            if (this.currentSong) {
-                this.currentSong.seek(0)
+            this.setPlayingState(true)
+            if (this.currentLyric) {
+                this.currentLyric.seek(0)
             }
         },
         prev() {
@@ -299,7 +300,7 @@ export default {
                 if (this.playing) {
                     this.currentLyric.play()
                 }
-                console.log(this.currentLyric)
+                // console.log(this.currentLyric)
             }).catch(() => {
                 this.currentLyric = null
                 this.playingLyric = ''
