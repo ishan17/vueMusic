@@ -9,7 +9,7 @@ export function getTopList() {
       uin: 0,
       needNewCode: 1,
       platform: 'h5',
-      format: 'json'
+      format: 'json'   // format: 'jsonp'  用jsonp 也可以
     })
     return axios.get(url, {
         params: data

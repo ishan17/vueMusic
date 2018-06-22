@@ -50,6 +50,7 @@
       },
       _normalizeSongs(list) {
         let ret = []
+        list =  list.slice(0,3)
         list.forEach((item) => {
           const musicData = item.data
           if (musicData.songid && musicData.albummid) {

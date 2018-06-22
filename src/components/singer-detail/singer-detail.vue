@@ -49,6 +49,7 @@
       },
       _normalizeSongs(list) {
         let ret = []
+        list =  list.slice(0,3)
         list.forEach((item) => {
             // 解构赋值
           let {musicData} = item

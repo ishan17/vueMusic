@@ -41,7 +41,7 @@ export function getSongVkey(param) {
     const url = 'https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg'
 
     const data = {
-        g_tk:5381,
+        g_tk: 5381,
         loginUin: 0,
         hostUin: 0,
         format: 'json',
