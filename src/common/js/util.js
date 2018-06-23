@@ -14,6 +14,7 @@ export function shuffle(arr) {
   return _arr
 }
 
+// 节流函数
 export function debounce(func, delay) {
   let timer
 
@@ -22,6 +23,7 @@ export function debounce(func, delay) {
       clearTimeout(timer)
     }
     timer = setTimeout(() => {
+      // 操作比较快时,最终只会执行一次func
       func.apply(this, args)
     }, delay)
   }

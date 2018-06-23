@@ -34,15 +34,15 @@
       pullup: {
         type: Boolean,
         default: false
+      },
+      beforeScroll: {
+        type: Boolean,
+        default: false
+      },
+      refreshDelay: {
+        type: Number,
+        default: 20
       }
-    //   beforeScroll: {
-    //     type: Boolean,
-    //     default: false
-    //   },
-    //   refreshDelay: {
-    //     type: Number,
-    //     default: 20
-    //   }
     },
     mounted() {
       setTimeout(() => {
@@ -67,19 +67,18 @@
         }
 
         if (this.pullup) {
-          let that = this
           this.scroll.on('scrollEnd', () => {
             if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
-              that.$emit('scroll-to-end')
+              this.$emit('my-scroll-to-end')
             }
           })
         }
 
-        // if (this.beforeScroll) {
-        //   this.scroll.on('beforeScrollStart', () => {
-        //     this.$emit('beforeScroll')
-        //   })
-        // }
+        if (this.beforeScroll) {
+          this.scroll.on('beforeScrollStart', () => {
+            this.$emit('beforeScroll')
+          })
+        }
       },
       disable() {
         this.scroll && this.scroll.disable()
