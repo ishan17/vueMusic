@@ -83,6 +83,7 @@
             </div>
         </div>
         </transition>
+        <!-- <audio ref="audio" :src="url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio> -->
         <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
     </div>
 </template>
@@ -100,6 +101,9 @@ import {shuffle} from 'common/js/util'
 import Lyric from 'lyric-parser'
 import Scroll from 'src/base/scroll/scroll'
 
+// import {getSongVkey} from 'src/api/singer'
+// import {ERR_OK as ok} from 'src/api/config'
+
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transform-duration')
 
@@ -116,6 +120,7 @@ export default {
             currentLineNum: 0,
             currentShow: 'cd',
             playingLyric: ''
+            // url: ''
         }
     },
     computed: {
@@ -215,9 +220,8 @@ export default {
         loop() {
             this.$refs.audio.currentTime = 0
             this.$refs.audio.play()
-            this.setPlayingState(true)
-            if (this.currentLyric) {
-                this.currentLyric.seek(0)
+            if (this.currentSong) {
+                this.currentSong.seek(0)
             }
         },
         prev() {
@@ -258,6 +262,18 @@ export default {
             this.playReady = false
         },
         ready() {
+            // let song = this.currentSong
+            // let param = {
+            //         songmid: song.songmid,
+            //         filename: `C400${song.songmid}.m4a`
+            //     }
+            // getSongVkey(param).then((res) => {
+            //     if (res.code === ok) {
+            //         let vkey = res.data.items[0].vkey
+            //         this.url = `http://dl.stream.qqmusic.qq.com/C400${song.songmid}.m4a?vkey=${vkey}&guid=7635355198&uin=0&fromtag=66`
+            //         this.playReady = true
+            //     }
+            // })
             this.playReady = true
         },
         error() {
