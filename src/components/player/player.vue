@@ -78,11 +78,12 @@
                 <i @click.stop="togglePlaying" class="icon-mini" :class="iconMini"></i>
                 </progress-circle>
             </div>
-            <div class="control">
+            <div class="control" @click="showPlaylist">
                 <i class="icon-playlist"></i>
             </div>
         </div>
         </transition>
+        <play-list ref="showlist"></play-list>
         <!-- <audio ref="audio" :src="url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio> -->
         <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
     </div>
@@ -100,6 +101,7 @@ import {shuffle} from 'common/js/util'
 // Lyric是一个class对象
 import Lyric from 'lyric-parser'
 import Scroll from 'src/base/scroll/scroll'
+import PlayList from 'src/components/play-list/play-list'
 
 // import {getSongVkey} from 'src/api/singer'
 // import {ERR_OK as ok} from 'src/api/config'
@@ -150,6 +152,9 @@ export default {
         ])
     },
     methods: {
+        showPlaylist() {
+            this.$refs.showlist.show()
+        },
         back() {
             this.setFullScreen(false)
         },
@@ -221,7 +226,7 @@ export default {
             this.$refs.audio.currentTime = 0
             this.$refs.audio.play()
             if (this.currentSong) {
-                this.currentSong.seek(0)
+                this.currentLyric.seek(0)
             }
         },
         prev() {
@@ -465,7 +470,8 @@ export default {
     components: {
         progressBar,
         progressCircle,
-        Scroll
+        Scroll,
+        PlayList
     }
 }
 </script>

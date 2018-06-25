@@ -24,7 +24,7 @@
   import {search} from 'src/api/search'
   import {ERR_OK as ok} from 'src/api/config'
   import {createSong} from 'common/js/song'
-//   import {getSongVkey} from 'src/api/singer'
+  import {getSongVkey} from 'src/api/singer'
   import {mapMutations, mapActions} from 'vuex'
   import Singer from 'common/js/singer'
 
@@ -58,6 +58,9 @@
         }
     },
     methods: {
+        refresh() {
+            this.$refs.suggest.refresh()
+        },
         search() {
             this.hasMore = true
             this.page = 1
@@ -108,6 +111,7 @@
             } else {
                 this.insertSong(item)
             }
+            this.$emit('select')
         },
         listScroll() {
             this.$emit('listScroll')
@@ -127,27 +131,28 @@
             if (data.song) {
                 // ret = ret.concat(this._normalizeSongs(data.song.list))
                 // 异步请求问题 去掉歌手
-                // ret = this._normalizeSongs(data.song.list)
+                ret = this._normalizeSongs(data.song.list)
             }
             return ret
         },
         _normalizeSongs(list) {
             let ret = []
             // 减少获取vkey次数  只拿3条
-            // list = list.slice(0,3)
+            list = list.slice(0,3)
             list.forEach((musicData) => {
                 if (musicData.songid && musicData.albummid) {
-                    // let param = {
-                    //     songmid: musicData.songmid,
-                    //     filename: `C400${musicData.songmid}.m4a`
-                    // }
-                    // getSongVkey(param).then((res) => {
-                    //     if (res.code === ok) {
-                    //         let vke y = res.data.items[0].vkey
-                    //         ret.push(createSong(musicData,vkey))
-                    //     }
-                    // })
-                    ret.push(createSong(musicData,null))
+                    let param = {
+                        songmid: musicData.songmid,
+                        filename: `C400${musicData.songmid}.m4a`
+                    }
+                    getSongVkey(param).then((res) => {
+                        if (res.code === ok) {
+                            let vkey = res.data.items[0].vkey
+                            ret.push(createSong(musicData,vkey))
+                            // return ret
+                        }
+                    })
+                    // ret.push(createSong(musicData,null))
                 }
             })
             return ret   
