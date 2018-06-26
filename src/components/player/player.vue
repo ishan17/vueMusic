@@ -45,8 +45,8 @@
                     <span class="time time-r">{{formate(currentSong.duration)}}</span>
                 </div>
                 <div class="operators">
-                    <div class="icon i-left" @click="changeModel">
-                        <i :class="iconModel"></i>
+                    <div class="icon i-left" @click="changeMode">
+                        <i :class="iconMode"></i>
                     </div>
                     <div class="icon i-left" :class="disabledCls">
                         <i @click="prev" class="icon-prev"></i>
@@ -78,7 +78,7 @@
                 <i @click.stop="togglePlaying" class="icon-mini" :class="iconMini"></i>
                 </progress-circle>
             </div>
-            <div class="control" @click="showPlaylist">
+            <div class="control" @click.stop="showPlaylist">
                 <i class="icon-playlist"></i>
             </div>
         </div>
@@ -97,11 +97,12 @@ import {prefixStyle} from 'common/js/dom'
 import progressBar from 'src/base/progress-bar/progress-bar'
 import progressCircle from 'src/base/progress-circle/progress-circle'
 import {playMode} from 'common/js/config'
-import {shuffle} from 'common/js/util'
+// import {shuffle} from 'common/js/util'
 // Lyric是一个class对象
 import Lyric from 'lyric-parser'
 import Scroll from 'src/base/scroll/scroll'
 import PlayList from 'src/components/play-list/play-list'
+import {playerMixin} from 'common/js/mixin'
 
 // import {getSongVkey} from 'src/api/singer'
 // import {ERR_OK as ok} from 'src/api/config'
@@ -110,6 +111,7 @@ const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transform-duration')
 
 export default {
+    mixins: [playerMixin],
     created() {
         this.touch = {}
     },
@@ -138,9 +140,9 @@ export default {
         percent() {
             return this.currentTime / this.currentSong.duration
         },
-        iconModel() {
-            return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
-        },
+        // iconMode() {
+        //     return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random'
+        // },
         ...mapGetters([
             'fullScreen',
             'playlist',
@@ -297,24 +299,24 @@ export default {
                 this.currentLyric.seek(currentTime * 1000)
             }
         },
-        changeModel() {
-            let mode = (this.mode + 1) % 3
-            this.setPlayMode(mode)
-            let list = null
-            if (mode === playMode.random) {
-                list = shuffle(this.sequenceList)
-            } else {
-                list = this.sequenceList
-            }
-            this.resetCurrentIndex(list)
-            this.setPlayList(list)     
-        },
-        resetCurrentIndex(list) {
-            let index = list.findIndex((item) => {
-                return item.id === this.currentSong.id
-            })
-            this.setCurrentIndex(index)
-        },
+        // changeMode() {
+        //     let mode = (this.mode + 1) % 3
+        //     this.setPlayMode(mode)
+        //     let list = null
+        //     if (mode === playMode.random) {
+        //         list = shuffle(this.sequenceList)
+        //     } else {
+        //         list = this.sequenceList
+        //     }
+        //     this.resetCurrentIndex(list)
+        //     this.setPlayList(list)     
+        // },
+        // resetCurrentIndex(list) {
+        //     let index = list.findIndex((item) => {
+        //         return item.id === this.currentSong.id
+        //     })
+        //     this.setCurrentIndex(index)
+        // },
         getLyric() {
             this.currentSong.getLyric().then((lyric) => {
                 this.currentLyric = new Lyric(lyric, this.handleLyric)
@@ -442,6 +444,10 @@ export default {
     },
     watch: {
         currentSong(newSong,oldSong) {
+            // 列表没有歌曲时
+            if (!newSong.id) {
+                return
+            }
             if (newSong.id === oldSong.id) {
                 return
             }

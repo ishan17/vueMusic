@@ -28,6 +28,7 @@ export const playlistMixin = {
   }
 }
 
+// mixin  组件之间公用的js逻辑
 export const playerMixin = {
   computed: {
     iconMode() {

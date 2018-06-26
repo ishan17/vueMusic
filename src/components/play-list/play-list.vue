@@ -4,27 +4,28 @@
             <div class="list-wrapper" @click.stop>
                 <div class="list-header">
                     <h1 class="title">
-                        <i class="icon"></i>
-                        <span class="text"></span>
-                        <span class="clear"><i class="icon-clear"></i></span>
+                        <i class="icon" :class="iconMode" @click="changeMode"></i>
+                        <span class="text">{{modeText}}</span>
+                        <span class="clear" @click="showConfirm"><i class="icon-clear"></i></span>
                     </h1>
                 </div>
-                <div ref="listContent" class="list-content">
-                <!-- <transition-group ref="list" name="list" tag="ul"> -->
-                    <li class="item">
-                        <i class="current"></i>
-                        <span class="text"></span>
-                        <span class="like">
-                            <i class="icon-favorite"></i>
-                        </span>
-                        <span class="delete">
-                            <i class="icon-delete"></i>
-                        </span>
-                    </li>
-            <!-- </transition-group> -->
-               </div>
+                <scroll ref="listContent" class="list-content" :data="sequenceList">
+                    <!-- tag属性是dom渲染时渲染的标签名字 -->
+                    <transition-group ref="list" name="list" tag="ul">
+                        <li ref="listItem" class="item" v-for="(item,index) in sequenceList" :key="index" @click="selectItem(item,index)">
+                            <i class="current" :class="getCurrentIcon(item)"></i>
+                            <span class="text">{{item.name}}</span>
+                            <span class="like">
+                                <i class="icon-favorite"></i>
+                            </span>
+                            <span class="delete" @click.stop="deleteOne(item)">
+                                <i class="icon-delete"></i>
+                            </span>
+                        </li>
+                    </transition-group>
+                </scroll>
                 <div class="list-operate">
-                    <div class="add">
+                    <div class="add" @click="addSong">
                         <i class="icon-add"></i>
                         <span class="text">添加歌曲到队列</span>
                     </div>
@@ -33,27 +34,106 @@
                     <span>关闭</span>
                 </div>
             </div>
-        <!-- <confirm ref="confirm" @confirm="confirmClear" text="是否清空播放列表" confirmBtnText="清空"></confirm> -->
-        <!-- <add-song ref="addSong"></add-song> -->
+            <confirm ref="confirm" @confirm="confirmClear" text="是否清空播放列表" confirmBtnText="清空"></confirm>
+            <add-song ref="addSong"></add-song>
         </div>
     </transition>
 </template>
 
 <script type="text/ecmascript-6">
-
+import {mapGetters, mapMutations,mapActions} from 'vuex'
+import Scroll from 'src/base/scroll/scroll'
+import Confirm from 'src/base/confirm/confirm'
+import AddSong from 'src/components/add-song/add-song'
+import {playMode} from 'common/js/config'
+import {playerMixin} from 'common/js/mixin'
 export default {
+    mixins: [playerMixin],
     data() {
         return {
             showFlag: false
         }
     },
+    computed: {
+        modeText() {
+            return this.mode === playMode.sequence ? '顺序播放' : this.mode === playMode.random ? '随机播放' : '单曲循环'
+        },
+        ...mapGetters([
+            'sequenceList',
+            'currentSong',
+            'playlist',
+            'mode'
+        ])
+    },
     methods: {
+        selectItem(item,index) {
+            if (this.mode === playMode.random) {
+                index = this.playlist.findIndex((song) => {
+                    return song.id === item.id
+                })
+            }
+            this.setCurrentIndex(index)
+            this.setPlayingState(true)
+        },
+        deleteOne(item) {
+            this.deleteSong(item)
+            if (!this.playlist) {
+                this.hide()
+            }
+        },
+        confirmClear() {
+            this.deleteSongList()
+            this.$refs.confirm.hide()
+        },
+        showConfirm() {
+            this.$refs.confirm.show()
+        },
+        getCurrentIcon(item) {
+            if (item.id === this.currentSong.id) {
+                return 'icon-play'
+            }
+        },
+        addSong() {
+            this.$refs.addSong.show()
+        },
         show() {
             this.showFlag = true
+            // 显示之后才可以正常计算DOM高度
+            setTimeout(() => {
+                this.$refs.listContent.refresh()
+                this.scrollToCurrent(this.currentSong)
+            }, 20)
         },
         hide() {
             this.showFlag = false
+        },
+        scrollToCurrent(current) {
+            const index = this.sequenceList.findIndex((song) => {
+                return song.id === current.id
+            })
+            this.$refs.listContent.scrollToElement(this.$refs.listItem[index], 300)
+        },
+        ...mapMutations({
+            setCurrentIndex: 'SET_CURRENT_INDEX',
+            setPlayingState: 'SET_PLAYING_STATE'
+        }),
+        ...mapActions([
+            'deleteSong',
+            'deleteSongList'
+        ])
+    },
+    watch: {
+        curentSong(newSong,oldSong) {
+            if (!this.showFlag || newSong.id === oldSong.id) {
+                return
+            }
+            this.scrollToCurrent(newSong)
         }
+    },
+    components: {
+        Scroll,
+        Confirm,
+        AddSong
     }
 }
  
