@@ -9,7 +9,9 @@
 
 
 import {playMode} from 'common/js/config'
-import {loadSearch} from 'common/js/cache'
+import {loadSearch,loadPlay} from 'common/js/cache'
+
+// 各个组件共享的数据
 const state = {
     singer: {},
     playing: false,
@@ -20,7 +22,8 @@ const state = {
     currentIndex: -1,
     disc: {},
     topList: {},
-    searchHistory: loadSearch()
+    searchHistory: loadSearch(),
+    playHistory: loadPlay()
 }
 
 export default state
