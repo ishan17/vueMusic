@@ -58,7 +58,7 @@
                         <i @click="next" class="icon-next"></i>
                     </div>
                     <div class="icon i-right">
-                        <i class="icon icon-not-favorite"></i>
+                        <i class="icon" :class="getFavoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
                     </div>
                 </div>
             </div>
@@ -398,6 +398,8 @@ export default {
             // 改变CD透明度
             this.$refs.middleL.style.opacity = opacity
             this.$refs.middleL.style[transitionDuration] = `${time}`
+            // 切换到歌词之后会出现  歌词不滚动现象
+            this.$refs.lyricList.refresh()
         },
         formate(interval) {
             interval = interval | 0

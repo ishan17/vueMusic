@@ -23,7 +23,7 @@
   import NoResult from 'src/base/no-result/no-result'
   import {search} from 'src/api/search'
   import {ERR_OK as ok} from 'src/api/config'
-  import {createSong} from 'common/js/song'
+  import {createSongNovkey} from 'common/js/song'
   import {getSongVkey} from 'src/api/singer'
   import {mapMutations, mapActions} from 'vuex'
   import Singer from 'common/js/singer'
@@ -99,6 +99,7 @@
             })
         },
         selectItem(item) {
+            const musicData = item
             if (item.type === TYPE_SINGER) {
                 const singer = new Singer({
                     id: item.singermid,
@@ -109,7 +110,21 @@
                 })
                 this.setSinger(singer)
             } else {
-                this.insertSong(item)
+                if (musicData.mid) {
+                    let param = {
+                        songmid: musicData.mid,
+                        filename: `C400${musicData.mid}.m4a`
+                    }
+                    // 单次获取歌曲vkey 避免一次大量请求
+                    getSongVkey(param).then((res) => {
+                        if (res.code === ok) {
+                            let vkey = res.data.items[0].vkey
+                            musicData.url =  `http://dl.stream.qqmusic.qq.com/C400${musicData.mid}.m4a?vkey=${vkey}&guid=7635355198&uin=0&fromtag=66`
+                            this.insertSong(musicData)
+                        }
+                    })
+                }
+                // this.insertSong(item)
             }
             this.$emit('select')
         },
@@ -129,30 +144,30 @@
                 ret.push({...data.zhida, ...{type: TYPE_SINGER}})
             }
             if (data.song) {
-                // ret = ret.concat(this._normalizeSongs(data.song.list))
+                ret = ret.concat(this._normalizeSongs(data.song.list))
                 // 异步请求问题 去掉歌手
-                ret = this._normalizeSongs(data.song.list)
+                // ret = this._normalizeSongs(data.song.list)
             }
             return ret
         },
         _normalizeSongs(list) {
             let ret = []
             // 减少获取vkey次数  只拿3条
-            list = list.slice(0,3)
+            // list = list.slice(0,3)
             list.forEach((musicData) => {
                 if (musicData.songid && musicData.albummid) {
-                    let param = {
-                        songmid: musicData.songmid,
-                        filename: `C400${musicData.songmid}.m4a`
-                    }
-                    getSongVkey(param).then((res) => {
-                        if (res.code === ok) {
-                            let vkey = res.data.items[0].vkey
-                            ret.push(createSong(musicData,vkey))
-                            // return ret
-                        }
-                    })
-                    // ret.push(createSong(musicData,null))
+                    // let param = {
+                    //     songmid: musicData.songmid,
+                    //     filename: `C400${musicData.songmid}.m4a`
+                    // }
+                    // getSongVkey(param).then((res) => {
+                    //     if (res.code === ok) {
+                    //         let vkey = res.data.items[0].vkey
+                    //         ret.push(createSong(musicData,vkey))
+                    //         // return ret
+                    //     }
+                    // })
+                    ret.push(createSongNovkey(musicData))
                 }
             })
             return ret   
