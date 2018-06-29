@@ -10,6 +10,7 @@
   import {ERR_OK as ok} from 'src/api/config'
   import {mapGetters} from 'vuex'
   import {createSong} from 'common/js/song'
+  // import {createSongNovkey} from 'common/js/song'
   import {getSongVkey} from 'src/api/singer'
 
   export default {
@@ -60,6 +61,7 @@
                 ret.push(createSong(musicData,vkey))
               }
             })  
+            // ret.push(createSongNovkey(musicData))
           }
         })
         return ret

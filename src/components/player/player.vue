@@ -84,7 +84,6 @@
         </div>
         </transition>
         <play-list ref="showlist"></play-list>
-        <!-- <audio ref="audio" :src="url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio> -->
         <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio>
     </div>
 </template>
@@ -104,9 +103,6 @@ import Scroll from 'src/base/scroll/scroll'
 import PlayList from 'src/components/play-list/play-list'
 import {playerMixin} from 'common/js/mixin'
 
-// import {getSongVkey} from 'src/api/singer'
-// import {ERR_OK as ok} from 'src/api/config'
-
 const transform = prefixStyle('transform')
 const transitionDuration = prefixStyle('transform-duration')
 
@@ -124,7 +120,6 @@ export default {
             currentLineNum: 0,
             currentShow: 'cd',
             playingLyric: ''
-            // url: ''
         }
     },
     computed: {
@@ -270,18 +265,6 @@ export default {
             this.playReady = false
         },
         ready() {
-            // let song = this.currentSong
-            // let param = {
-            //         songmid: song.songmid,
-            //         filename: `C400${song.songmid}.m4a`
-            //     }
-            // getSongVkey(param).then((res) => {
-            //     if (res.code === ok) {
-            //         let vkey = res.data.items[0].vkey
-            //         this.url = `http://dl.stream.qqmusic.qq.com/C400${song.songmid}.m4a?vkey=${vkey}&guid=7635355198&uin=0&fromtag=66`
-            //         this.playReady = true
-            //     }
-            // })
             this.playReady = true
             this.savePlayHistory(this.currentSong)
         },
@@ -462,9 +445,13 @@ export default {
             if (newSong.id === oldSong.id) {
                 return
             }
+
             // 每次切换歌曲 需要切断之前的歌曲的歌词
             if (this.currentLyric) {
                 this.currentLyric.stop()
+                this.currentTime = 0
+                this.playingLyric = ''
+                this.currentLineNum = 0
             }
             // Vue 实现响应式并不是数据发生变化之后 DOM 立即变化，而是按一定的策略进行 DOM 的更新
             // $nextTick 是在下次 DOM 更新循环结束之后执行延迟回调，在修改数据之后使用 $nextTick，则可以在回调中获取更新后的 DOM
@@ -472,6 +459,8 @@ export default {
             //     this.$refs.audio.play()
             //     this.getLyric()
             // })
+
+
             clearTimeout(this.timer)
             this.timer = setTimeout(() => {
                 this.$refs.audio.play()

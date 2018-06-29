@@ -9,8 +9,10 @@
 <script type="text/ecmascript-6">
   import MusicList from 'components/music-list/music-list'
   import {getSingerDetail,getSongVkey} from 'src/api/singer'
+  // import {getSingerDetail} from 'src/api/singer'
   import {ERR_OK as ok} from 'src/api/config'
   import {createSong} from 'common/js/song'
+  // import {createSongNovkey} from 'common/js/song'
   import {mapGetters} from 'vuex'
 
   export default {
@@ -64,6 +66,7 @@
                 ret.push(createSong(musicData,vkey))
               }
             })  
+            // ret.push(createSongNovkey(musicData))
           }
         })
         return ret

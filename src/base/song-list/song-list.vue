@@ -15,6 +15,9 @@
 </template>
 
 <script type="text/ecmascript-6">
+  // import {getSongVkey} from 'src/api/singer'
+  // import {ERR_OK as ok} from 'src/api/config'
+
   export default {
     props: {
       songs: {
@@ -29,6 +32,21 @@
     },
     methods: {
       selectItem(item, index) {
+        // 点击歌手时获取vkey
+        // if (item.mid) {
+        //   let param = {
+        //     songmid: item.mid,
+        //     filename: `C400${item.mid}.m4a`
+        //   }
+        //   getSongVkey(param).then((res) => {
+        //     if (res.code === ok) {
+        //       let vkey = res.data.items[0].vkey
+        //       item.url =  `http://dl.stream.qqmusic.qq.com/C400${item.mid}.m4a?vkey=${vkey}&guid=7635355198&uin=0&fromtag=66`
+        //       this.$emit('select', item, index)
+        //     }
+        //   })
+        // } 
+
         this.$emit('select', item, index)
       },
       getDesc(song) {

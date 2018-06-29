@@ -136,3 +136,5 @@ export const selectPlay = function ({commit, state}, {list, index}) {
   export const deleteFavoriteList = function ({commit}, song) {
     commit(types.SET_FAVORITE_LIST, deleteFavorite(song))
   }
+
+
