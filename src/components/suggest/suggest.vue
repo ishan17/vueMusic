@@ -139,10 +139,13 @@
         },
         _genResult(data) {
             let ret = []
-            // 查找歌手
-            if (data.zhida && data.zhida.singerid) {
-                ret.push({...data.zhida, ...{type: TYPE_SINGER}})
+            if (this.page === 1) {
+                // 查找歌手
+                if (data.zhida && data.zhida.singerid) {
+                    ret.push({...data.zhida, ...{type: TYPE_SINGER}})
+                }
             }
+            
             if (data.song) {
                 ret = ret.concat(this._normalizeSongs(data.song.list))
                 // 异步请求问题 去掉歌手
